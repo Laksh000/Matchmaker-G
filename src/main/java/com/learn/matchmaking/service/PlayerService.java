@@ -3,12 +3,14 @@ package com.learn.matchmaking.service;
 import com.learn.matchmaking.constant.PlayerConstants;
 import com.learn.matchmaking.exception.PlayerNotFoundException;
 import com.learn.matchmaking.model.Player;
+import com.learn.matchmaking.model.PlayerBasicDTO;
 import com.learn.matchmaking.repo.PlayerRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 @Service
 public class PlayerService {
@@ -21,21 +23,26 @@ public class PlayerService {
         this.playerRepo = playerRepo;
     }
 
-    public List<Player> getPlayers() {
+    public List<PlayerBasicDTO> getPlayers() {
 
-        return playerRepo.findAll();
+        return playerRepo.findAll().stream()
+                .map(PlayerBasicDTO::new)
+                .toList();
     }
 
-    public Player getPlayer(String name) {
+    public PlayerBasicDTO getPlayer(String name) {
 
-        return playerRepo.findByName(name);
+        return new PlayerBasicDTO(playerRepo.findByName(name));
     }
 
-    public String registerPlayers(List<Player> players) {
+    public String registerPlayers(List<PlayerBasicDTO> playersDTO) {
 
-        //error messages to be converted to constants
         try {
+            List<Player> players = playersDTO.stream()
+                            .map(Player::new)
+                            .toList();
             playerRepo.saveAll(players);
+
             return PlayerConstants.SAVE_SUCCESS_MESSAGE;
         } catch (Exception e) {
             return PlayerConstants.SAVE_FAILURE_MESSAGE + e.getMessage();
@@ -43,7 +50,7 @@ public class PlayerService {
 
     }
 
-    public String updatePlayers(List<Player> players) {
+    public String updatePlayers(List<PlayerBasicDTO> players) {
 
         List<String> missingPlayers = new ArrayList<>();
         List<Player> updatedPlayers = players.stream()
@@ -66,7 +73,7 @@ public class PlayerService {
                                       return null;
                                   }
                               }
-                        ).filter(player -> player!=null)
+                        ).filter(Objects::nonNull)
                         .toList();
         playerRepo.saveAll(updatedPlayers);
 

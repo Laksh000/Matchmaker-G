@@ -18,4 +18,20 @@ public class Player {
     private String id;
     private String name;
     private Map<String, Object> attributes;
+    private Boolean isSearchingForMatch;
+
+    public Player(PlayerBasicDTO playerBasicDTO) {
+        super();
+        this.id = playerBasicDTO.getId();
+        this.name = playerBasicDTO.getName();
+        this.attributes = playerBasicDTO.getAttributes();
+    }
+
+    public Player(PlayerDTO playerDTO) {
+        super();
+        this.id = playerDTO.getId();
+        this.name = playerDTO.getName();
+        this.attributes = playerDTO.getAttributes();
+        this.isSearchingForMatch = playerDTO.getIsSearchingForMatch();
+    }
 }
