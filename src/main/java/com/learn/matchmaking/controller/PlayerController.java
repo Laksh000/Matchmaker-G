@@ -24,24 +24,24 @@ public class PlayerController {
     @GetMapping("all")
     public ResponseEntity<List<PlayerBasicDTO>> getPlayers() {
 
-        return new ResponseEntity<>(playerService.getPlayers(), HttpStatus.OK);
+        return playerService.getPlayers();
     }
 
     @GetMapping("{name}")
     public ResponseEntity<PlayerBasicDTO> getPlayer(@PathVariable String name) {
 
-        return new ResponseEntity<>(playerService.getPlayer(name), HttpStatus.OK);
+        return playerService.getPlayer(name);
     }
 
     @PostMapping("register")
     public ResponseEntity<String> addPlayers(@RequestBody List<PlayerBasicDTO> players) {
 
-        return new ResponseEntity<>(playerService.registerPlayers(players), HttpStatus.OK);
+        return playerService.registerPlayers(players);
     }
 
     @PutMapping("update")
     public ResponseEntity<String> updatePlayers(@RequestBody List<PlayerBasicDTO> players) {
 
-        return new ResponseEntity<>(playerService.updatePlayers(players), HttpStatus.OK);
+        return playerService.updatePlayers(players);
     }
 }

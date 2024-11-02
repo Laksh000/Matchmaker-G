@@ -6,6 +6,8 @@ import com.learn.matchmaking.model.Player;
 import com.learn.matchmaking.model.PlayerBasicDTO;
 import com.learn.matchmaking.repo.PlayerRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -23,19 +25,35 @@ public class PlayerService {
         this.playerRepo = playerRepo;
     }
 
-    public List<PlayerBasicDTO> getPlayers() {
+    public ResponseEntity<List<PlayerBasicDTO>> getPlayers() {
 
-        return playerRepo.findAll().stream()
+        List<PlayerBasicDTO> playersBasicDTO = playerRepo.findAll().stream()
                 .map(PlayerBasicDTO::new)
                 .toList();
+
+        if(!playersBasicDTO.isEmpty()){
+
+            return ResponseEntity.ok(playersBasicDTO);
+        } else {
+
+            return ResponseEntity.noContent().build();
+        }
     }
 
-    public PlayerBasicDTO getPlayer(String name) {
+    public ResponseEntity<PlayerBasicDTO> getPlayer(String name) {
 
-        return new PlayerBasicDTO(playerRepo.findByName(name));
+        PlayerBasicDTO playerBasicDTO = new PlayerBasicDTO(playerRepo.findByName(name));
+
+        if (playerBasicDTO.getId() == null) {
+
+            return ResponseEntity.notFound().build();
+        } else {
+
+            return ResponseEntity.ok(playerBasicDTO);
+        }
     }
 
-    public String registerPlayers(List<PlayerBasicDTO> playersDTO) {
+    public ResponseEntity<String> registerPlayers(List<PlayerBasicDTO> playersDTO) {
 
         try {
             List<Player> players = playersDTO.stream()
@@ -43,14 +61,15 @@ public class PlayerService {
                             .toList();
             playerRepo.saveAll(players);
 
-            return PlayerConstants.SAVE_SUCCESS_MESSAGE;
+            return new ResponseEntity<>(PlayerConstants.SAVE_SUCCESS_MESSAGE, HttpStatus.OK);
         } catch (Exception e) {
-            return PlayerConstants.SAVE_FAILURE_MESSAGE + e.getMessage();
+
+            return new ResponseEntity<>(PlayerConstants.SAVE_FAILURE_MESSAGE + e.getMessage(), HttpStatus.BAD_REQUEST);
         }
 
     }
 
-    public String updatePlayers(List<PlayerBasicDTO> players) {
+    public ResponseEntity<String> updatePlayers(List<PlayerBasicDTO> players) {
 
         List<String> missingPlayers = new ArrayList<>();
         List<Player> updatedPlayers = players.stream()
@@ -78,9 +97,10 @@ public class PlayerService {
         playerRepo.saveAll(updatedPlayers);
 
         if(missingPlayers.isEmpty()){
-            return PlayerConstants.UPDATE_SUCCESS_MESSAGE;
+            return new ResponseEntity<>(PlayerConstants.UPDATE_SUCCESS_MESSAGE, HttpStatus.OK);
         } else {
-            return PlayerConstants.UPDATE_SUCCESS_MESSAGE + PlayerConstants.UPDATE_FAILURE_MESSAGE + String.join(", ", missingPlayers);
+            return new ResponseEntity<>(PlayerConstants.UPDATE_SUCCESS_MESSAGE + PlayerConstants.UPDATE_FAILURE_MESSAGE
+                    + String.join(", ", missingPlayers), HttpStatus.BAD_REQUEST);
         }
     }
 
