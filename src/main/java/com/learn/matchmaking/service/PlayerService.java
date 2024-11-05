@@ -1,9 +1,10 @@
 package com.learn.matchmaking.service;
 
 import com.learn.matchmaking.constant.PlayerConstants;
+import com.learn.matchmaking.dto.PlayerDTO;
 import com.learn.matchmaking.exception.PlayerNotFoundException;
 import com.learn.matchmaking.model.Player;
-import com.learn.matchmaking.model.PlayerBasicDTO;
+import com.learn.matchmaking.dto.PlayerBasicDTO;
 import com.learn.matchmaking.repo.PlayerRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -53,7 +54,7 @@ public class PlayerService {
         }
     }
 
-    public ResponseEntity<String> registerPlayers(List<PlayerBasicDTO> playersDTO) {
+    public ResponseEntity<String> registerPlayers(List<PlayerDTO> playersDTO) {
 
         try {
             List<Player> players = playersDTO.stream()
@@ -69,7 +70,7 @@ public class PlayerService {
 
     }
 
-    public ResponseEntity<String> updatePlayers(List<PlayerBasicDTO> players) {
+    public ResponseEntity<String> updatePlayers(List<PlayerDTO> players) {
 
         List<String> missingPlayers = new ArrayList<>();
         List<Player> updatedPlayers = players.stream()
@@ -82,8 +83,12 @@ public class PlayerService {
 
                                           if (updatedPlayer.getName() != null)
                                               player.setName(updatedPlayer.getName());
+                                          if(player.getAttributes() == null)
+                                              player.setAttributes(updatedPlayer.getAttributes());
                                           if(updatedPlayer.getAttributes() != null)
                                               player.getAttributes().putAll(updatedPlayer.getAttributes());
+                                          if(updatedPlayer.getId() != null)
+                                              player.setIsSearchingForMatch(updatedPlayer.getIsSearchingForMatch());
                                       }
 
                                       return player;

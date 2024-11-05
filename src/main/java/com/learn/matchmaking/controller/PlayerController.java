@@ -1,9 +1,9 @@
 package com.learn.matchmaking.controller;
 
-import com.learn.matchmaking.model.PlayerBasicDTO;
+import com.learn.matchmaking.dto.PlayerBasicDTO;
+import com.learn.matchmaking.dto.PlayerDTO;
 import com.learn.matchmaking.service.PlayerService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -34,13 +34,13 @@ public class PlayerController {
     }
 
     @PostMapping("register")
-    public ResponseEntity<String> addPlayers(@RequestBody List<PlayerBasicDTO> players) {
+    public ResponseEntity<String> addPlayers(@RequestBody List<PlayerDTO> players) {
 
         return playerService.registerPlayers(players);
     }
 
     @PutMapping("update")
-    public ResponseEntity<String> updatePlayers(@RequestBody List<PlayerBasicDTO> players) {
+    public ResponseEntity<String> updatePlayers(@RequestBody List<PlayerDTO> players) {
 
         return playerService.updatePlayers(players);
     }

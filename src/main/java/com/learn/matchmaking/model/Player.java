@@ -1,5 +1,7 @@
 package com.learn.matchmaking.model;
 
+import com.learn.matchmaking.dto.PlayerBasicDTO;
+import com.learn.matchmaking.dto.PlayerDTO;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
