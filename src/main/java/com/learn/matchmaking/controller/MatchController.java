@@ -26,12 +26,12 @@ public class MatchController {
     @PostMapping("pool")
     public ResponseEntity<MatchResponse> matchGroupFromPool(@RequestBody MatchRequest matchRequest) {
 
-        return new ResponseEntity<>(matchService.getGroupsFromPool(matchRequest), HttpStatus.OK);
+        return matchService.getGroupsFromPool(matchRequest);
     }
 
     @PostMapping("custom")
     public ResponseEntity<MatchResponse> matchGroupFromGivenIds(@RequestBody MatchRequest matchRequest) {
 
-        return new ResponseEntity<>(matchService.getGroupsFromCustomIds(matchRequest), HttpStatus.OK);
+        return matchService.getGroupsFromCustomIds(matchRequest);
     }
 }

@@ -1,16 +1,21 @@
 package com.learn.matchmaking.service;
 
+import com.learn.matchmaking.constant.PlayerConstants;
 import com.learn.matchmaking.dto.MatchRequest;
 import com.learn.matchmaking.dto.MatchResponse;
 import com.learn.matchmaking.dto.PlayerBasicDTO;
+import com.learn.matchmaking.exception.PlayerNotFoundException;
 import com.learn.matchmaking.model.Player;
 import com.learn.matchmaking.repo.PlayerRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -24,13 +29,42 @@ public class MatchService {
         this.playerRepo = playerRepo;
     }
 
-    public MatchResponse getGroupsFromPool(MatchRequest matchRequest) {
+    public ResponseEntity<MatchResponse> getGroupsFromPool(MatchRequest matchRequest) {
 
         List<PlayerBasicDTO> searchingPlayers = playerRepo.findByIsSearchingForMatch(true)
                 .stream().map(PlayerBasicDTO::new)
                 .collect(Collectors.toCollection(ArrayList::new));
 
-        return createMatchGroups(searchingPlayers, matchRequest) ;
+        return new ResponseEntity<>(createMatchGroups(searchingPlayers, matchRequest), HttpStatus.OK) ;
+    }
+
+    public ResponseEntity<MatchResponse> getGroupsFromCustomIds(MatchRequest matchRequest) {
+
+        List<String> customPlayerIds = matchRequest.getPlayerIds();
+        if(customPlayerIds.isEmpty()) {
+
+            return new ResponseEntity<>(new MatchResponse(new ArrayList<>(), "Player Id's are mandatory"),HttpStatus.NO_CONTENT);
+        }
+        List<PlayerBasicDTO> customPlayersDetails = new ArrayList<>();
+
+        for(String customPlayerId : customPlayerIds) {
+
+            try {
+
+                Player player = playerRepo.findById(customPlayerId).orElse(null);
+                if (player == null) {
+                    throw new PlayerNotFoundException("Player with ID " + customPlayerId + " not found");
+                }
+                customPlayersDetails.add(new PlayerBasicDTO(player));
+
+            }  catch (Exception e) {
+
+                return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+
+            }
+        }
+
+        return new ResponseEntity<>(createMatchGroups(customPlayersDetails, matchRequest), HttpStatus.OK);
     }
 
     private MatchResponse createMatchGroups(List<PlayerBasicDTO> players, MatchRequest matchRequest) {
@@ -38,7 +72,7 @@ public class MatchService {
         int groupSize = matchRequest.getGroupSize();
         List<List<PlayerBasicDTO>> matchGroups = new ArrayList<>();
         List<PlayerBasicDTO> currentGroup = new ArrayList<>();
-        System.out.println(matchRequest);
+
         players.sort((p1,p2) -> Double.compare(
                 calculateScoreForPlayer(p2, matchRequest),
                 calculateScoreForPlayer(p1, matchRequest)
@@ -80,7 +114,7 @@ public class MatchService {
             }
         }
 
-        return new MatchResponse(matchGroups);
+        return new MatchResponse(matchGroups,"Matchmaking was Successful");
     }
 
     private double calculateScoreForPlayer(PlayerBasicDTO player, MatchRequest matchRequest) {
@@ -114,10 +148,5 @@ public class MatchService {
         }
 
         return totalWeight > 0 ? totalScore / totalWeight : 0.0;
-    }
-
-    public MatchResponse getGroupsFromCustomIds(MatchRequest matchRequest) {
-
-        return new MatchResponse();
     }
 }
