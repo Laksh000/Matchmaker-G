@@ -12,8 +12,10 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Objects;
+import java.util.stream.Collectors;
 
 @Service
 public class PlayerService {
@@ -26,51 +28,59 @@ public class PlayerService {
         this.playerRepo = playerRepo;
     }
 
-    public ResponseEntity<List<PlayerBasicDTO>> getPlayers() {
+    public List<PlayerBasicDTO> getPlayers() {
 
-        List<PlayerBasicDTO> playersBasicDTO = playerRepo.findAll().stream()
+        return playerRepo.findAll().stream()
                 .map(PlayerBasicDTO::new)
                 .toList();
-
-        if(!playersBasicDTO.isEmpty()){
-
-            return ResponseEntity.ok(playersBasicDTO);
-        } else {
-
-            return ResponseEntity.noContent().build();
-        }
     }
 
-    public ResponseEntity<PlayerBasicDTO> getPlayer(String name) {
+    public PlayerBasicDTO getPlayer(String name) {
 
         PlayerBasicDTO playerBasicDTO = new PlayerBasicDTO(playerRepo.findByName(name));
 
         if (playerBasicDTO.getId() == null) {
 
-            return ResponseEntity.notFound().build();
+            throw new PlayerNotFoundException("Player with name " + name + " not found");
         } else {
 
-            return ResponseEntity.ok(playerBasicDTO);
+            return playerBasicDTO;
         }
     }
 
-    public ResponseEntity<String> registerPlayers(List<PlayerDTO> playersDTO) {
+    public String registerPlayers(List<PlayerDTO> playersDTO) {
 
-        try {
+            List<String> duplicatePlayers = new ArrayList<>();
             List<Player> players = playersDTO.stream()
-                            .map(Player::new)
+                            .map(
+                                    playerDTO -> {
+                                            Player player = playerRepo.findByName(playerDTO.getName());
+
+                                            if (player != null) {
+
+                                                duplicatePlayers.add(playerDTO.getName());
+                                                return null;
+                                            } else {
+
+                                                return player;
+                                            }
+                                    }
+                            ).filter(Objects::nonNull)
                             .toList();
             playerRepo.saveAll(players);
 
-            return new ResponseEntity<>(PlayerConstants.SAVE_SUCCESS_MESSAGE, HttpStatus.OK);
-        } catch (Exception e) {
+        if(duplicatePlayers.isEmpty()) {
 
-            return new ResponseEntity<>(PlayerConstants.SAVE_FAILURE_MESSAGE + e.getMessage(), HttpStatus.BAD_REQUEST);
+            return PlayerConstants.SAVE_SUCCESS_MESSAGE;
+        } else {
+
+            return PlayerConstants.SAVE_FAILURE_MESSAGE + String.join(", ", duplicatePlayers
+                    + " as players with the same name already exists" );
         }
 
     }
 
-    public ResponseEntity<String> updatePlayers(List<PlayerDTO> players) {
+    public String updatePlayers(List<PlayerDTO> players) {
 
         List<String> missingPlayers = new ArrayList<>();
         List<Player> updatedPlayers = players.stream()
@@ -83,12 +93,15 @@ public class PlayerService {
 
                                           if (updatedPlayer.getName() != null)
                                               player.setName(updatedPlayer.getName());
-                                          if(player.getAttributes() == null)
-                                              player.setAttributes(updatedPlayer.getAttributes());
-                                          if(updatedPlayer.getAttributes() != null)
-                                              player.getAttributes().putAll(updatedPlayer.getAttributes());
-                                          if(updatedPlayer.getId() != null)
+                                          if(updatedPlayer.getIsSearchingForMatch() != null)
                                               player.setIsSearchingForMatch(updatedPlayer.getIsSearchingForMatch());
+                                          if (updatedPlayer.getAttributes() != null) {
+                                              if (player.getAttributes() == null) {
+                                                  player.setAttributes(updatedPlayer.getAttributes());
+                                              } else {
+                                                  player.getAttributes().putAll(updatedPlayer.getAttributes());
+                                              }
+                                          }
                                       }
 
                                       return player;
@@ -98,14 +111,16 @@ public class PlayerService {
                                   }
                               }
                         ).filter(Objects::nonNull)
-                        .toList();
+                .collect(Collectors.toCollection(ArrayList::new));
         playerRepo.saveAll(updatedPlayers);
 
         if(missingPlayers.isEmpty()){
-            return new ResponseEntity<>(PlayerConstants.UPDATE_SUCCESS_MESSAGE, HttpStatus.OK);
+
+            return PlayerConstants.UPDATE_SUCCESS_MESSAGE;
         } else {
-            return new ResponseEntity<>(PlayerConstants.UPDATE_SUCCESS_MESSAGE + PlayerConstants.UPDATE_FAILURE_MESSAGE
-                    + String.join(", ", missingPlayers), HttpStatus.BAD_REQUEST);
+
+            return PlayerConstants.UPDATE_FAILURE_MESSAGE
+                    + String.join(", ", missingPlayers);
         }
     }
 

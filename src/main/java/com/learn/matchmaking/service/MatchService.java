@@ -1,6 +1,5 @@
 package com.learn.matchmaking.service;
 
-import com.learn.matchmaking.constant.PlayerConstants;
 import com.learn.matchmaking.dto.MatchRequest;
 import com.learn.matchmaking.dto.MatchResponse;
 import com.learn.matchmaking.dto.PlayerBasicDTO;
@@ -15,7 +14,6 @@ import org.springframework.stereotype.Service;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service

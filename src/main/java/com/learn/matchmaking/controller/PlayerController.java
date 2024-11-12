@@ -1,7 +1,9 @@
 package com.learn.matchmaking.controller;
 
+import com.learn.matchmaking.constant.PlayerConstants;
 import com.learn.matchmaking.dto.PlayerBasicDTO;
 import com.learn.matchmaking.dto.PlayerDTO;
+import com.learn.matchmaking.exception.PlayerNotFoundException;
 import com.learn.matchmaking.service.PlayerService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -24,24 +26,52 @@ public class PlayerController {
     @GetMapping("all")
     public ResponseEntity<List<PlayerBasicDTO>> getPlayers() {
 
-        return playerService.getPlayers();
+        if(!playerService.getPlayers().isEmpty()) {
+
+            return ResponseEntity.ok(playerService.getPlayers());
+        } else {
+
+            return ResponseEntity.noContent().build();
+        }
     }
 
     @GetMapping("{name}")
     public ResponseEntity<PlayerBasicDTO> getPlayer(@PathVariable String name) {
 
-        return playerService.getPlayer(name);
+        try {
+
+            return ResponseEntity.ok(playerService.getPlayer(name));
+        } catch (PlayerNotFoundException e) {
+
+            return ResponseEntity.notFound().build();
+        }
     }
 
     @PostMapping("register")
     public ResponseEntity<String> addPlayers(@RequestBody List<PlayerDTO> players) {
 
-        return playerService.registerPlayers(players);
+        String message = playerService.registerPlayers(players);
+
+        if(message.equals(PlayerConstants.SAVE_SUCCESS_MESSAGE)) {
+
+            return ResponseEntity.ok(message);
+        } else {
+
+            return ResponseEntity.badRequest().body(message);
+        }
     }
 
     @PutMapping("update")
     public ResponseEntity<String> updatePlayers(@RequestBody List<PlayerDTO> players) {
 
-        return playerService.updatePlayers(players);
+        String message = playerService.updatePlayers(players);
+
+        if(message.equals(PlayerConstants.UPDATE_FAILURE_MESSAGE)) {
+
+            return ResponseEntity.ok(message);
+        } else {
+
+            return ResponseEntity.badRequest().body(message);
+        }
     }
 }
