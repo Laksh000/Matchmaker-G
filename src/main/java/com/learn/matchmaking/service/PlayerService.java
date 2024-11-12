@@ -62,7 +62,7 @@ public class PlayerService {
                                                 return null;
                                             } else {
 
-                                                return player;
+                                                return new Player(playerDTO);
                                             }
                                     }
                             ).filter(Objects::nonNull)

@@ -109,11 +109,13 @@ class PlayerServiceTest {
         playersDTO.add(new PlayerDTO(player2));
 
         //when
-        when(playerRepo.saveAll(players)).thenReturn(players);
+        when(playerRepo.findByName(player1.getName())).thenReturn(null);
+        when(playerRepo.findByName(player2.getName())).thenReturn(null);
         String actual = playerService.registerPlayers(playersDTO);
 
         //then
         assertThat(actual).isEqualTo(PlayerConstants.SAVE_SUCCESS_MESSAGE);
+        verify(playerRepo, times(1)).saveAll(anyList());
     }
 
     @Test
