@@ -43,7 +43,7 @@ public class PlayerController {
             return ResponseEntity.ok(playerService.getPlayer(name));
         } catch (PlayerNotFoundException e) {
 
-            return ResponseEntity.notFound().build();
+            return ResponseEntity.noContent().build();
         }
     }
 

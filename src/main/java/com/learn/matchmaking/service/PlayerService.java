@@ -11,10 +11,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -37,15 +34,9 @@ public class PlayerService {
 
     public PlayerBasicDTO getPlayer(String name) {
 
-        PlayerBasicDTO playerBasicDTO = new PlayerBasicDTO(playerRepo.findByName(name));
-
-        if (playerBasicDTO.getId() == null) {
-
-            throw new PlayerNotFoundException("Player with name " + name + " not found");
-        } else {
-
-            return playerBasicDTO;
-        }
+        return playerRepo.findByName(name)
+                .map(PlayerBasicDTO::new)
+                .orElseThrow(() -> new PlayerNotFoundException("Player with name " + name + " not found"));
     }
 
     public String registerPlayers(List<PlayerDTO> playersDTO) {
@@ -54,9 +45,8 @@ public class PlayerService {
             List<Player> players = playersDTO.stream()
                             .map(
                                     playerDTO -> {
-                                            Player player = playerRepo.findByName(playerDTO.getName());
-
-                                            if (player != null) {
+                                            Optional<Player> player = Optional.ofNullable(playerRepo.findByName(playerDTO.getName())).orElse(null);
+                                            if (player.isPresent()) {
 
                                                 duplicatePlayers.add(playerDTO.getName());
                                                 return null;

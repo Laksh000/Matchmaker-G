@@ -10,6 +10,6 @@ import java.util.Optional;
 @Repository
 public interface PlayerRepository extends MongoRepository<Player, String> {
 
-    Player findByName(String name);
+    Optional<Player> findByName(String name);
     List<Player> findByIsSearchingForMatch(boolean searchingForMatch);
 }

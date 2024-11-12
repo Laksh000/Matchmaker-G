@@ -57,7 +57,7 @@ class PlayerServiceTest {
         );
 
         //when
-        when(playerRepo.findByName(name)).thenReturn(player);
+        when(playerRepo.findByName(name)).thenReturn(Optional.of(player));
         PlayerBasicDTO  actual = playerService.getPlayer(name);
 
         //then
@@ -70,10 +70,9 @@ class PlayerServiceTest {
 
         //given
         String name = "Player1";
-        Player player = new Player();
 
         //when
-        when(playerRepo.findByName(name)).thenReturn(player);
+        when(playerRepo.findByName(name)).thenReturn(Optional.empty());
 
         //then
         assertThrows(PlayerNotFoundException.class, () -> playerService.getPlayer(name));
@@ -109,8 +108,8 @@ class PlayerServiceTest {
         playersDTO.add(new PlayerDTO(player2));
 
         //when
-        when(playerRepo.findByName(player1.getName())).thenReturn(null);
-        when(playerRepo.findByName(player2.getName())).thenReturn(null);
+        when(playerRepo.findByName(player1.getName())).thenReturn(Optional.empty());
+        when(playerRepo.findByName(player2.getName())).thenReturn(Optional.empty());
         String actual = playerService.registerPlayers(playersDTO);
 
         //then
@@ -147,7 +146,7 @@ class PlayerServiceTest {
         playersDTO.add(new PlayerDTO(player2));
 
         //when
-        when(playerRepo.findByName(player1.getName())).thenReturn(player1);
+        when(playerRepo.findByName(player1.getName())).thenReturn(Optional.of(player1));
         String actual = playerService.registerPlayers(playersDTO);
 
         //then
