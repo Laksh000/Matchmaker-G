@@ -16,7 +16,6 @@ public class MatchRequest {
     private Map<String, Object> targetAttributes; // Attributes for matching
     private Map<String, Double> attributeWeights; // Weights for each attribute
     private int groupSize; // Number of players per group
-    private double matchThreshold; // Minimum score for a match
     private boolean matchTypeFair; //To be Matched fair or not
 
 }
