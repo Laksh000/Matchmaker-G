@@ -1,6 +1,10 @@
 package com.learn.matchmaking.controller;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.learn.matchmaking.constant.PlayerConstants;
 import com.learn.matchmaking.dto.PlayerBasicDTO;
+import com.learn.matchmaking.dto.PlayerDTO;
 import com.learn.matchmaking.exception.PlayerNotFoundException;
 import com.learn.matchmaking.model.Player;
 import com.learn.matchmaking.service.PlayerService;
@@ -24,14 +28,16 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 class PlayerControllerTest {
 
     private final MockMvc mockMvc;
+    private final ObjectMapper objectMapper;
 
     @MockBean
     private PlayerService playerService;
 
     @Autowired
-    public PlayerControllerTest(MockMvc mockMvc) {
+    public PlayerControllerTest(MockMvc mockMvc, ObjectMapper objectMapper) {
 
         this.mockMvc = mockMvc;
+        this.objectMapper = objectMapper;
     }
 
     @Test
@@ -125,10 +131,130 @@ class PlayerControllerTest {
     }
 
     @Test
-    void addPlayers() {
+    void canAddPlayers() throws Exception {
+
+        //given
+        PlayerDTO player1DTO = new PlayerDTO();
+        player1DTO.setId("kjdshfGIkhvfytvf");
+        player1DTO.setName("Player1");
+        player1DTO.setAttributes(
+                new HashMap<>(Map.of(
+                        "strength", 85,
+                        "speed", 92
+                ))
+        );
+        PlayerDTO player2DTO = new PlayerDTO();
+        player2DTO.setId("auebvgavbiu");
+        player2DTO.setName("Player2");
+        player2DTO.setAttributes(
+                new HashMap<>(Map.of(
+                        "strength",75 ,
+                        "speed", 69
+                ))
+        );
+        List<PlayerDTO> players = List.of(player1DTO, player2DTO);
+        String playersJSON = objectMapper.writeValueAsString(players);
+
+        //when
+        when(playerService.registerPlayers(players)).thenReturn(PlayerConstants.SAVE_SUCCESS_MESSAGE);
+
+        //then
+        mockMvc.perform(MockMvcRequestBuilders.post("/players/register")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(playersJSON))
+                .andExpect(status().isOk());
     }
 
     @Test
-    void updatePlayers() {
+    void canNotAddPlayers() throws Exception {
+
+        //given
+        PlayerDTO player1DTO = new PlayerDTO();
+        player1DTO.setId("kjdshfGIkhvfytvf");
+        player1DTO.setName("Player1");
+        player1DTO.setAttributes(
+                new HashMap<>(Map.of(
+                        "strength", 85,
+                        "speed", 92
+                ))
+        );
+        PlayerDTO player2DTO = new PlayerDTO();
+        player2DTO.setId("auebvgavbiu");
+        player2DTO.setName("Player2");
+        player2DTO.setAttributes(
+                new HashMap<>(Map.of(
+                        "strength",75 ,
+                        "speed", 69
+                ))
+        );
+        List<PlayerDTO> players = List.of(player1DTO, player2DTO);
+        String failureMessage = PlayerConstants.SAVE_FAILURE_MESSAGE + "Player1 as players with the same name already exists";
+        String playersJSON = objectMapper.writeValueAsString(players);
+
+        //when
+        when(playerService.registerPlayers(players)).thenReturn(failureMessage);
+
+        //then
+        mockMvc.perform(MockMvcRequestBuilders.post("/players/register")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(playersJSON))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void canUpdatePlayers() throws Exception {
+
+        //given
+        PlayerDTO player1DTO = new PlayerDTO();
+        player1DTO.setId("kjdshfGIkhvfytvf");
+        player1DTO.setAttributes(
+                new HashMap<>(Map.of(
+                        "strength", 85,
+                        "speed", 92
+                ))
+        );
+        PlayerDTO player2DTO = new PlayerDTO();
+        player2DTO.setId("auebvgavbiu");
+        player2DTO.setName("Player2updated");
+        List<PlayerDTO> players = List.of(player1DTO, player2DTO);
+        String playersJSON = objectMapper.writeValueAsString(players);
+
+        //when
+        when(playerService.updatePlayers(players)).thenReturn(PlayerConstants.UPDATE_SUCCESS_MESSAGE);
+
+        //then
+        mockMvc.perform(MockMvcRequestBuilders.put("/players/update")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(playersJSON))
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    void canNotUpdatePlayers() throws Exception {
+
+        //given
+        PlayerDTO player1DTO = new PlayerDTO();
+        player1DTO.setId("kjdshfGIkhvfytvf");
+        player1DTO.setAttributes(
+                new HashMap<>(Map.of(
+                        "strength", 85,
+                        "speed", 92
+                ))
+        );
+        PlayerDTO player2DTO = new PlayerDTO();
+        player2DTO.setId("auebvgavbiu");
+        player2DTO.setName("Player2updated");
+        List<PlayerDTO> players = List.of(player1DTO, player2DTO);
+        String failureMessage = PlayerConstants.UPDATE_FAILURE_MESSAGE + "Player2";
+        String playersJSON = objectMapper.writeValueAsString(players);
+
+        //when
+        when(playerService.updatePlayers(players)).thenReturn(failureMessage);
+
+        //then
+        mockMvc.perform(MockMvcRequestBuilders.put("/players/update")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(playersJSON))
+                .andExpect(status().isBadRequest());
     }
 }

@@ -66,7 +66,7 @@ public class PlayerController {
 
         String message = playerService.updatePlayers(players);
 
-        if(message.equals(PlayerConstants.UPDATE_FAILURE_MESSAGE)) {
+        if(message.equals(PlayerConstants.UPDATE_SUCCESS_MESSAGE)) {
 
             return ResponseEntity.ok(message);
         } else {

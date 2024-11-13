@@ -45,7 +45,7 @@ public class PlayerService {
             List<Player> players = playersDTO.stream()
                             .map(
                                     playerDTO -> {
-                                            Optional<Player> player = Optional.ofNullable(playerRepo.findByName(playerDTO.getName())).orElse(null);
+                                            Optional<Player> player = playerRepo.findByName(playerDTO.getName());
                                             if (player.isPresent()) {
 
                                                 duplicatePlayers.add(playerDTO.getName());
