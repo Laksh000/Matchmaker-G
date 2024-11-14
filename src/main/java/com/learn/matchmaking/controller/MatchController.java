@@ -28,7 +28,7 @@ public class MatchController {
 
         MatchResponse response = matchService.getGroupsFromPool(matchRequest);
 
-        if(response.getGroups() != null) {
+        if(!response.getGroups().isEmpty()) {
 
             return new ResponseEntity<>(response, HttpStatus.OK);
         } else {
@@ -42,7 +42,7 @@ public class MatchController {
 
         MatchResponse response = matchService.getGroupsFromCustomIds(matchRequest);
 
-        if(response.getGroups() != null) {
+        if(!response.getGroups().isEmpty()) {
 
             return new ResponseEntity<>(response, HttpStatus.OK);
         } else {
