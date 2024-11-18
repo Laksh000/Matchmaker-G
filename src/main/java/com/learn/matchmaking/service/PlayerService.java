@@ -2,6 +2,7 @@ package com.learn.matchmaking.service;
 
 import com.learn.matchmaking.constant.PlayerConstants;
 import com.learn.matchmaking.dto.PlayerDTO;
+import com.learn.matchmaking.exception.PlayerIdMissingException;
 import com.learn.matchmaking.exception.PlayerNotFoundException;
 import com.learn.matchmaking.model.Player;
 import com.learn.matchmaking.dto.PlayerBasicDTO;
@@ -79,7 +80,7 @@ public class PlayerService {
                                   try {
                                       Player player = null;
                                       String playerId = Optional.ofNullable(updatedPlayer.getId())
-                                              .orElseThrow(() -> new NullPointerException("Player id is null"));
+                                              .orElseThrow(() -> new PlayerIdMissingException("Player id is null"));
 
                                       if(!playerId.isEmpty()) {
                                           player = playerRepo.findById(playerId)
@@ -104,7 +105,7 @@ public class PlayerService {
                                   } catch (PlayerNotFoundException pe) {
                                       missingPlayers.add(pe.getMessage());
                                       return null;
-                                  } catch (NullPointerException npe) {
+                                  } catch (PlayerIdMissingException pie) {
                                       playerObjectWithIdNull.getAndIncrement();
                                       return null;
                                   }
