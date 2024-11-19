@@ -6,6 +6,7 @@ import com.learn.matchmaking.dto.MatchRequest;
 import com.learn.matchmaking.dto.MatchResponse;
 import com.learn.matchmaking.dto.PlayerBasicDTO;
 import com.learn.matchmaking.service.MatchService;
+import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
@@ -26,8 +27,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @WebMvcTest(controllers = MatchController.class)
 class MatchControllerTest {
 
-    private MockMvc mockMvc;
-    private ObjectMapper objectMapper;
+    private final MockMvc mockMvc;
+    private final ObjectMapper objectMapper;
 
     @MockBean
     private MatchService matchService;
@@ -43,85 +44,11 @@ class MatchControllerTest {
     void canMatchGroupFromPool() throws Exception {
 
         //given
-        MatchRequest request = new MatchRequest();
-        request.setMatchTypeFair(true);
-        request.setGroupSize(2);
-        request.setTargetAttributes(
-                new HashMap<>(
-                        Map.of(
-                                "strength", 80,
-                                "speed", 85,
-                                "isVIP", true,
-                                "experiencePoints", 2000
-                        )
-                )
-        );
-        request.setAttributeWeights(
-                new HashMap<>(
-                        Map.of(
-                                "strength", 0.4,
-                                "speed", 0.3,
-                                "isVIP", 0.2,
-                                "experiencePoints", 0.1
-                        )
-                )
-        );
-        PlayerBasicDTO playerBasicDTO1 = new PlayerBasicDTO();
-        playerBasicDTO1.setId("672a1754b2eeb2739fa1bb04");
-        playerBasicDTO1.setName("Player1");
-        playerBasicDTO1.setAttributes(
-                new HashMap<>(
-                        Map.of(
-                                "strength", 85,
-                                "speed", 92,
-                                "isVIP", true,
-                                "experiencePoints", 2500,
-                                "specialAbility", "Invisibility"
-                        )
-                )
-        );
-        PlayerBasicDTO playerBasicDTO2 = new PlayerBasicDTO();
-        playerBasicDTO2.setId("672a1754b2eeb2739fa1bb05");
-        playerBasicDTO2.setName("Player2");
-        playerBasicDTO2.setAttributes(
-                new HashMap<>(
-                        Map.of(
-                                "strength", 60,
-                                "speed", 75,
-                                "isVIP", false,
-                                "experiencePoints", 1500,
-                                "specialAbility", "Fire"
-                        )
-                )
-        );
-        PlayerBasicDTO playerBasicDTO3 = new PlayerBasicDTO();
-        playerBasicDTO3.setId("672a1754b2eeb2739fa1bb06");
-        playerBasicDTO3.setName("Player3");
-        playerBasicDTO3.setAttributes(
-                new HashMap<>(
-                        Map.of(
-                                "strength", 95,
-                                "speed", 80,
-                                "isVIP", true,
-                                "experiencePoints", 3000,
-                                "specialAbility", "Shield"
-                        )
-                )
-        );
-        PlayerBasicDTO playerBasicDTO4 = new PlayerBasicDTO();
-        playerBasicDTO4.setId("672a1754b2eeb2739fa1bb07");
-        playerBasicDTO4.setName("Player4");
-        playerBasicDTO4.setAttributes(
-                new HashMap<>(
-                        Map.of(
-                                "strength", 40,
-                                "speed", 60,
-                                "isVIP", false,
-                                "experiencePoints", 1200,
-                                "specialAbility", "Healing"
-                        )
-                )
-        );
+        MatchRequest request = getRequestWithOutIds();
+        PlayerBasicDTO playerBasicDTO1 = getBasicDTO1();
+        PlayerBasicDTO playerBasicDTO2 = getBasicDTO2();
+        PlayerBasicDTO playerBasicDTO3 = getBasicDTO3();
+        PlayerBasicDTO playerBasicDTO4 = getBasicDTO4();
         List<List<PlayerBasicDTO>> playersDTO = List.of(
                 List.of(playerBasicDTO1, playerBasicDTO4),
                 List.of(playerBasicDTO3, playerBasicDTO2)
@@ -148,29 +75,7 @@ class MatchControllerTest {
     void canNotMatchGroupFromPool() throws Exception {
 
         //given
-        MatchRequest request = new MatchRequest();
-        request.setMatchTypeFair(true);
-        request.setGroupSize(2);
-        request.setTargetAttributes(
-                new HashMap<>(
-                        Map.of(
-                                "strength", 80,
-                                "speed", 85,
-                                "isVIP", true,
-                                "experiencePoints", 2000
-                        )
-                )
-        );
-        request.setAttributeWeights(
-                new HashMap<>(
-                        Map.of(
-                                "strength", 0.4,
-                                "speed", 0.3,
-                                "isVIP", 0.2,
-                                "experiencePoints", 0.1
-                        )
-                )
-        );
+        MatchRequest request = getRequestWithOutIds();
         MatchResponse response = new MatchResponse(new ArrayList<>(), MatchConstants.MATCH_MAKING_CRITERIA_MESSAGE);
         String matchJSON = objectMapper.writeValueAsString(request);
 
@@ -188,88 +93,11 @@ class MatchControllerTest {
     @Test
     void canMatchGroupFromGivenIds() throws Exception {
 
-        MatchRequest request = new MatchRequest();
-        request.setMatchTypeFair(true);
-        request.setPlayerIds(new ArrayList<>(
-                List.of("672a1754b2eeb2739fa1bb04", "672a1754b2eeb2739fa1bb05", "672a1754b2eeb2739fa1bb06", "672a1754b2eeb2739fa1bb07")
-        ));
-        request.setGroupSize(2);
-        request.setTargetAttributes(
-                new HashMap<>(
-                        Map.of(
-                                "strength", 80,
-                                "speed", 85,
-                                "isVIP", true,
-                                "experiencePoints", 2000
-                        )
-                )
-        );
-        request.setAttributeWeights(
-                new HashMap<>(
-                        Map.of(
-                                "strength", 0.4,
-                                "speed", 0.3,
-                                "isVIP", 0.2,
-                                "experiencePoints", 0.1
-                        )
-                )
-        );
-        PlayerBasicDTO playerBasicDTO1 = new PlayerBasicDTO();
-        playerBasicDTO1.setId("672a1754b2eeb2739fa1bb04");
-        playerBasicDTO1.setName("Player1");
-        playerBasicDTO1.setAttributes(
-                new HashMap<>(
-                        Map.of(
-                                "strength", 85,
-                                "speed", 92,
-                                "isVIP", true,
-                                "experiencePoints", 2500,
-                                "specialAbility", "Invisibility"
-                        )
-                )
-        );
-        PlayerBasicDTO playerBasicDTO2 = new PlayerBasicDTO();
-        playerBasicDTO2.setId("672a1754b2eeb2739fa1bb05");
-        playerBasicDTO2.setName("Player2");
-        playerBasicDTO2.setAttributes(
-                new HashMap<>(
-                        Map.of(
-                                "strength", 60,
-                                "speed", 75,
-                                "isVIP", false,
-                                "experiencePoints", 1500,
-                                "specialAbility", "Fire"
-                        )
-                )
-        );
-        PlayerBasicDTO playerBasicDTO3 = new PlayerBasicDTO();
-        playerBasicDTO3.setId("672a1754b2eeb2739fa1bb06");
-        playerBasicDTO3.setName("Player3");
-        playerBasicDTO3.setAttributes(
-                new HashMap<>(
-                        Map.of(
-                                "strength", 95,
-                                "speed", 80,
-                                "isVIP", true,
-                                "experiencePoints", 3000,
-                                "specialAbility", "Shield"
-                        )
-                )
-        );
-        PlayerBasicDTO playerBasicDTO4 = new PlayerBasicDTO();
-        playerBasicDTO4.setId("672a1754b2eeb2739fa1bb07");
-        playerBasicDTO4.setName("Player4");
-        playerBasicDTO4.setAttributes(
-                new HashMap<>(
-                        Map.of(
-                                "strength", 40,
-                                "speed", 60,
-                                "isVIP", false,
-                                "experiencePoints", 1200,
-                                "specialAbility", "Healing"
-                        )
-                )
-        );
+        MatchRequest request = getRequestWithIds();
+        PlayerBasicDTO playerBasicDTO1 = getBasicDTO1();
+        PlayerBasicDTO playerBasicDTO2 = getBasicDTO2();
+        PlayerBasicDTO playerBasicDTO3 = getBasicDTO3();
+        PlayerBasicDTO playerBasicDTO4 = getBasicDTO4();
         List<List<PlayerBasicDTO>> playersDTO = List.of(
                 List.of(playerBasicDTO1, playerBasicDTO4),
                 List.of(playerBasicDTO3, playerBasicDTO2)
@@ -296,6 +124,94 @@ class MatchControllerTest {
     void canNotMatchGroupFromGivenIds() throws Exception {
 
         //given
+        MatchRequest request = getRequestWithOutIds();
+        MatchResponse response = new MatchResponse(new ArrayList<>(), MatchConstants.MATCH_PLAYER_IDS_MANDATORY_MESSAGE);
+        String matchJSON = objectMapper.writeValueAsString(request);
+
+        //when
+        when(matchService.getGroupsFromCustomIds(request)).thenReturn(response);
+
+        //then
+        mockMvc.perform(MockMvcRequestBuilders.post("/match/custom")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(matchJSON))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.message").value(MatchConstants.MATCH_PLAYER_IDS_MANDATORY_MESSAGE));
+    }
+
+    private static  PlayerBasicDTO getBasicDTO4() {
+        PlayerBasicDTO playerBasicDTO4 = new PlayerBasicDTO();
+        playerBasicDTO4.setId("672a1754b2eeb2739fa1bb07");
+        playerBasicDTO4.setName("Player4");
+        playerBasicDTO4.setAttributes(
+                new HashMap<>(
+                        Map.of(
+                                "strength", 40,
+                                "speed", 60,
+                                "isVIP", false,
+                                "experiencePoints", 1200,
+                                "specialAbility", "Healing"
+                        )
+                )
+        );
+        return playerBasicDTO4;
+    }
+
+    private static  PlayerBasicDTO getBasicDTO3() {
+        PlayerBasicDTO playerBasicDTO3 = new PlayerBasicDTO();
+        playerBasicDTO3.setId("672a1754b2eeb2739fa1bb06");
+        playerBasicDTO3.setName("Player3");
+        playerBasicDTO3.setAttributes(
+                new HashMap<>(
+                        Map.of(
+                                "strength", 95,
+                                "speed", 80,
+                                "isVIP", true,
+                                "experiencePoints", 3000,
+                                "specialAbility", "Shield"
+                        )
+                )
+        );
+        return playerBasicDTO3;
+    }
+
+    private static  PlayerBasicDTO getBasicDTO2() {
+        PlayerBasicDTO playerBasicDTO2 = new PlayerBasicDTO();
+        playerBasicDTO2.setId("672a1754b2eeb2739fa1bb05");
+        playerBasicDTO2.setName("Player2");
+        playerBasicDTO2.setAttributes(
+                new HashMap<>(
+                        Map.of(
+                                "strength", 60,
+                                "speed", 75,
+                                "isVIP", false,
+                                "experiencePoints", 1500,
+                                "specialAbility", "Fire"
+                        )
+                )
+        );
+        return playerBasicDTO2;
+    }
+
+    private static  PlayerBasicDTO getBasicDTO1() {
+        PlayerBasicDTO playerBasicDTO1 = new PlayerBasicDTO();
+        playerBasicDTO1.setId("672a1754b2eeb2739fa1bb04");
+        playerBasicDTO1.setName("Player1");
+        playerBasicDTO1.setAttributes(
+                new HashMap<>(
+                        Map.of(
+                                "strength", 85,
+                                "speed", 92,
+                                "isVIP", true,
+                                "experiencePoints", 2500,
+                                "specialAbility", "Invisibility"
+                        )
+                )
+        );
+        return playerBasicDTO1;
+    }
+
+    private static  MatchRequest getRequestWithOutIds() {
         MatchRequest request = new MatchRequest();
         request.setMatchTypeFair(true);
         request.setGroupSize(2);
@@ -319,17 +235,36 @@ class MatchControllerTest {
                         )
                 )
         );
-        MatchResponse response = new MatchResponse(new ArrayList<>(), MatchConstants.MATCH_PLAYER_IDS_MANDATORY_MESSAGE);
-        String matchJSON = objectMapper.writeValueAsString(request);
+        return request;
+    }
 
-        //when
-        when(matchService.getGroupsFromCustomIds(request)).thenReturn(response);
-
-        //then
-        mockMvc.perform(MockMvcRequestBuilders.post("/match/custom")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(matchJSON))
-                .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.message").value(MatchConstants.MATCH_PLAYER_IDS_MANDATORY_MESSAGE));
+    private static  MatchRequest getRequestWithIds() {
+        MatchRequest request = new MatchRequest();
+        request.setMatchTypeFair(true);
+        request.setPlayerIds(new ArrayList<>(
+                List.of("672a1754b2eeb2739fa1bb04", "672a1754b2eeb2739fa1bb05", "672a1754b2eeb2739fa1bb06", "672a1754b2eeb2739fa1bb07")
+        ));
+        request.setGroupSize(2);
+        request.setTargetAttributes(
+                new HashMap<>(
+                        Map.of(
+                                "strength", 80,
+                                "speed", 85,
+                                "isVIP", true,
+                                "experiencePoints", 2000
+                        )
+                )
+        );
+        request.setAttributeWeights(
+                new HashMap<>(
+                        Map.of(
+                                "strength", 0.4,
+                                "speed", 0.3,
+                                "isVIP", 0.2,
+                                "experiencePoints", 0.1
+                        )
+                )
+        );
+        return request;
     }
 }
