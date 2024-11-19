@@ -18,17 +18,6 @@ jobs:
   build:
     runs-on: ubuntu-latest
 
-    services:
-      mongo:
-        image: mongo:5.0.1
-        ports:
-          - 27017:27017
-        options: >-
-          --health-cmd "mongosh --eval 'db.adminCommand(\"ping\")'"
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 3
-
     steps:
     # Step 1: Checkout code
     - name: Checkout code
@@ -46,24 +35,9 @@ jobs:
     - name: Set up Docker
       uses: docker/setup-buildx-action@v2
 
-    # Step 4: Wait for MongoDB to be ready
-    - name: Wait for MongoDB
-      run: |
-        echo "Waiting for MongoDB to be ready..."
-        for i in {1..30}; do
-          if nc -z localhost 27017; then
-            echo "MongoDB is ready!"
-            exit 0
-          fi
-          sleep 2
-        done
-        echo "MongoDB did not start in time." >&2
-        exit 1
-
-    # Step 5: Run tests and build with Maven
+    # Step 4: Run tests and build with Maven
     - name: Build and Test with Maven
       run: mvn -B verify --file pom.xml
-
 
     # Optional: Uploads the full dependency graph to GitHub to improve the quality of Dependabot alerts this repository can receive
     - name: Update dependency graph
