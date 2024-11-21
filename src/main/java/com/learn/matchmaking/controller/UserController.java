@@ -23,13 +23,15 @@ public class UserController {
     @PostMapping("/register")
     public ResponseEntity<String> registerUser(@RequestBody Users user) {
 
-        if(usersService.registerUser(user).equals(UserConstants.USER_REGISTRATION_SUCCESSFUL_MESSAGE)){
+        String message = usersService.registerUser(user);
 
-            return new ResponseEntity<>(UserConstants.USER_REGISTRATION_SUCCESSFUL_MESSAGE, HttpStatus.CREATED);
+        if(message.equals(UserConstants.USER_REGISTRATION_SUCCESSFUL_MESSAGE)){
+
+            return new ResponseEntity<>(message, HttpStatus.CREATED);
 
         } else {
 
-            return new ResponseEntity<>(UserConstants.USER_REGISTRATION_FAILED_MESSAGE, HttpStatus.BAD_REQUEST);
+            return new ResponseEntity<>(message, HttpStatus.BAD_REQUEST);
         }
     }
 
@@ -42,7 +44,7 @@ public class UserController {
 
         } catch (Exception e ) {
 
-            return new ResponseEntity<>(UserConstants.USER_LOGIN_FAILED_MESSAGE, HttpStatus.BAD_REQUEST);
+            return new ResponseEntity<>(UserConstants.USER_LOGIN_FAILED_MESSAGE, HttpStatus.FORBIDDEN);
         }
     }
 }

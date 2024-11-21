@@ -41,7 +41,7 @@ public class UsersService {
             return UserConstants.USER_REGISTRATION_SUCCESSFUL_MESSAGE;
         } else {
 
-            return String.format(UserConstants.USER_REGISTRATION_FAILED_MESSAGE, user.getUsername());
+            return String.format(UserConstants.USER_REGISTRATION_FAILED_MESSAGE, existingUser.get().getUsername());
         }
     }
 

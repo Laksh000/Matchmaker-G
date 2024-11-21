@@ -1,17 +1,25 @@
 package com.learn.matchmaking.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.learn.matchmaking.config.SecurityConfig;
 import com.learn.matchmaking.constant.MatchConstants;
 import com.learn.matchmaking.dto.MatchRequest;
 import com.learn.matchmaking.dto.MatchResponse;
 import com.learn.matchmaking.dto.PlayerBasicDTO;
+import com.learn.matchmaking.model.MyUserDetails;
+import com.learn.matchmaking.model.Users;
+import com.learn.matchmaking.service.JWTService;
 import com.learn.matchmaking.service.MatchService;
+import com.learn.matchmaking.service.MyUserDetailsService;
 import org.jetbrains.annotations.NotNull;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 
@@ -24,6 +32,7 @@ import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+@Import(SecurityConfig.class)
 @WebMvcTest(controllers = MatchController.class)
 class MatchControllerTest {
 
@@ -32,12 +41,31 @@ class MatchControllerTest {
 
     @MockBean
     private MatchService matchService;
+    @MockBean
+    private JWTService jwtService;
+    @MockBean
+    private MyUserDetailsService myUserDetailsService;
+
+    private String username;
+    private String testToken;
+    private UserDetails userDetails;
 
     @Autowired
     public MatchControllerTest(MockMvc mockMvc, ObjectMapper objectMapper) {
 
         this.mockMvc = mockMvc;
         this.objectMapper = objectMapper;
+    }
+
+    @BeforeEach
+    public void setUp() {
+
+        username = "testUsername";
+        testToken = "dummy-jwt-token";
+        Users users = new Users();
+        users.setUsername(username);
+        users.setPassword("Testpassword");
+        userDetails = new MyUserDetails(users);
     }
 
     @Test
@@ -57,12 +85,16 @@ class MatchControllerTest {
         String matchJson = objectMapper.writeValueAsString(request);
 
         //when
+        when(jwtService.extractUsername(testToken)).thenReturn(username);
+        when(myUserDetailsService.loadUserByUsername(username)).thenReturn(userDetails);
+        when(jwtService.validateToken(testToken, userDetails)).thenReturn(true);
         when(matchService.getGroupsFromPool(request)).thenReturn(response);
 
         //then
         mockMvc.perform(MockMvcRequestBuilders.post("/match/pool")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(matchJson))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .header("Authorization", "Bearer " + testToken )
+                        .content(matchJson))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.message").value(MatchConstants.MATCH_SUCCESSFUL_MESSAGE))
                 .andExpect(jsonPath("$.groups[0][0].name").value("Player1"))
@@ -80,11 +112,15 @@ class MatchControllerTest {
         String matchJSON = objectMapper.writeValueAsString(request);
 
         //when
+        when(jwtService.extractUsername(testToken)).thenReturn(username);
+        when(myUserDetailsService.loadUserByUsername(username)).thenReturn(userDetails);
+        when(jwtService.validateToken(testToken, userDetails)).thenReturn(true);
         when(matchService.getGroupsFromPool(request)).thenReturn(response);
 
         //then
         mockMvc.perform(MockMvcRequestBuilders.post("/match/pool")
                         .contentType(MediaType.APPLICATION_JSON)
+                        .header("Authorization", "Bearer " + testToken )
                         .content(matchJSON))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.message").value(MatchConstants.MATCH_MAKING_CRITERIA_MESSAGE));
@@ -106,11 +142,15 @@ class MatchControllerTest {
         MatchResponse response = new MatchResponse(playersDTO, MatchConstants.MATCH_SUCCESSFUL_MESSAGE);
 
         //when
+        when(jwtService.extractUsername(testToken)).thenReturn(username);
+        when(myUserDetailsService.loadUserByUsername(username)).thenReturn(userDetails);
+        when(jwtService.validateToken(testToken, userDetails)).thenReturn(true);
         when(matchService.getGroupsFromCustomIds(request)).thenReturn(response);
 
         //then
         mockMvc.perform(MockMvcRequestBuilders.post("/match/custom")
                         .contentType(MediaType.APPLICATION_JSON)
+                        .header("Authorization", "Bearer " + testToken )
                         .content(matchJson))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.message").value(MatchConstants.MATCH_SUCCESSFUL_MESSAGE))
@@ -129,11 +169,15 @@ class MatchControllerTest {
         String matchJSON = objectMapper.writeValueAsString(request);
 
         //when
+        when(jwtService.extractUsername(testToken)).thenReturn(username);
+        when(myUserDetailsService.loadUserByUsername(username)).thenReturn(userDetails);
+        when(jwtService.validateToken(testToken, userDetails)).thenReturn(true);
         when(matchService.getGroupsFromCustomIds(request)).thenReturn(response);
 
         //then
         mockMvc.perform(MockMvcRequestBuilders.post("/match/custom")
                         .contentType(MediaType.APPLICATION_JSON)
+                        .header("Authorization", "Bearer " + testToken )
                         .content(matchJSON))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.message").value(MatchConstants.MATCH_PLAYER_IDS_MANDATORY_MESSAGE));
