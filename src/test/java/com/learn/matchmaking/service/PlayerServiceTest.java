@@ -10,6 +10,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
@@ -22,15 +23,8 @@ import static org.mockito.Mockito.*;
 @ExtendWith(MockitoExtension.class)
 class PlayerServiceTest {
 
-    @Mock
-    private PlayerRepository playerRepo;
-    private PlayerService playerService;
-
-    @BeforeEach
-    void setUp() {
-
-        playerService = new PlayerService(playerRepo);
-    }
+    @Mock private PlayerRepository playerRepo;
+    @InjectMocks private PlayerService playerService;
 
     @Test
     void canGetPlayers() {
@@ -139,8 +133,6 @@ class PlayerServiceTest {
                         "speed", 69
                 )
         );
-        List<Player> players = new ArrayList<>();
-        players.add(player2);
         List<PlayerDTO> playersDTO = new ArrayList<>();
         playersDTO.add(new PlayerDTO(player1));
         playersDTO.add(new PlayerDTO(player2));
