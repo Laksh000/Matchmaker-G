@@ -5,15 +5,18 @@ import com.learn.matchmaking.constant.MatchConstants;
 import com.learn.matchmaking.dto.MatchRequest;
 import com.learn.matchmaking.dto.MatchResponse;
 import com.learn.matchmaking.model.Player;
+import com.learn.matchmaking.model.Users;
 import com.learn.matchmaking.repo.PlayerRepository;
+import com.learn.matchmaking.repo.UserRepository;
+import com.learn.matchmaking.service.JWTService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.boot.test.web.server.LocalServerPort;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
+import org.springframework.http.*;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 import org.testcontainers.containers.MongoDBContainer;
@@ -35,8 +38,11 @@ class MatchControllerIntTest {
     @LocalServerPort
     private int port;
     private String baseUrl;
+    private String token;
     private final TestRestTemplate restTemplate;
     private final PlayerRepository playerRepository;
+    private final UserRepository userRepository;
+    private final JWTService jwtService;
     private final ObjectMapper objectMapper;
 
     @Container
@@ -51,10 +57,14 @@ class MatchControllerIntTest {
     }
 
     @Autowired
-    public MatchControllerIntTest(PlayerRepository playerRepository, TestRestTemplate restTemplate, ObjectMapper objectMapper) {
+    public MatchControllerIntTest(PlayerRepository playerRepository, TestRestTemplate restTemplate,
+                                  UserRepository userRepository, JWTService jwtService , ObjectMapper objectMapper
+    ) {
 
         this.playerRepository = playerRepository;
         this.restTemplate = restTemplate;
+        this.userRepository = userRepository;
+        this.jwtService = jwtService;
         this.objectMapper = objectMapper;
     }
 
@@ -64,6 +74,9 @@ class MatchControllerIntTest {
         baseUrl = "http://localhost:" + port + "/match/";
         playerRepository.deleteAll();
         playerRepository.saveAll(createMockPlayers());
+        userRepository.deleteAll();
+        userRepository.save(createMockUser());
+        token = jwtService.generateToken("mockAdmin");
     }
 
     public List<Player> createMockPlayers() {
@@ -101,14 +114,28 @@ class MatchControllerIntTest {
         return new ArrayList<>(List.of(player1, player2, player3, player4, player5, player6));
     }
 
+    public Users createMockUser() {
+
+        Users user =  new Users();
+        user.setUsername("mockAdmin");
+        user.setPassword(new BCryptPasswordEncoder(12).encode("Admin@000"));
+
+        return user;
+    }
+
     @Test
-    void canMatchGroupFromPool() {
+    void canMatchGroupFromPool() throws Exception {
 
         MatchRequest request = getRequestWithoutIds();
-        ResponseEntity<MatchResponse> response = restTemplate.postForEntity(
-                baseUrl + "pool",
-                request,
-                MatchResponse.class
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        headers.setBearerAuth(token);
+        HttpEntity<String> entity = new HttpEntity<>(objectMapper.writeValueAsString(request), headers);
+        ResponseEntity<MatchResponse> response = restTemplate.exchange(
+                  baseUrl + "pool",
+                  HttpMethod.POST,
+                  entity,
+                  MatchResponse.class
         );
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
@@ -117,7 +144,7 @@ class MatchControllerIntTest {
     }
 
     @Test
-    void canNotMatchGroupFromPool() {
+    void canNotMatchGroupFromPool() throws Exception {
 
         List<String> playerNames = List.of("Player1", "Player2", "Player4", "Player5", "Player6");
 
@@ -129,9 +156,14 @@ class MatchControllerIntTest {
         }
 
         MatchRequest request = getRequestWithoutIds();
-        ResponseEntity<MatchResponse> response = restTemplate.postForEntity(
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        headers.setBearerAuth(token);
+        HttpEntity<String> entity = new HttpEntity<>(objectMapper.writeValueAsString(request), headers);
+        ResponseEntity<MatchResponse> response = restTemplate.exchange(
                 baseUrl + "pool",
-                request,
+                HttpMethod.POST,
+                entity,
                 MatchResponse.class
         );
 
@@ -141,12 +173,17 @@ class MatchControllerIntTest {
     }
 
     @Test
-    void canMatchGroupFromGivenIds() {
+    void canMatchGroupFromGivenIds() throws Exception {
 
         MatchRequest request = this.getRequestWithIds();
-        ResponseEntity<MatchResponse> response = restTemplate.postForEntity(
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        headers.setBearerAuth(token);
+        HttpEntity<String> entity = new HttpEntity<>(objectMapper.writeValueAsString(request), headers);
+        ResponseEntity<MatchResponse> response = restTemplate.exchange(
                 baseUrl + "custom",
-                request,
+                HttpMethod.POST,
+                entity,
                 MatchResponse.class
         );
 
@@ -156,12 +193,17 @@ class MatchControllerIntTest {
     }
 
     @Test
-    void canNotMatchGroupFromGivenIdsWhenPlayerIdsEmpty() {
+    void canNotMatchGroupFromGivenIdsWhenPlayerIdsEmpty() throws Exception {
 
         MatchRequest request = getRequestWithoutIds();
-        ResponseEntity<MatchResponse> response = restTemplate.postForEntity(
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        headers.setBearerAuth(token);
+        HttpEntity<String> entity = new HttpEntity<>(objectMapper.writeValueAsString(request), headers);
+        ResponseEntity<MatchResponse> response = restTemplate.exchange(
                 baseUrl + "custom",
-                request,
+                HttpMethod.POST,
+                entity,
                 MatchResponse.class
         );
 
@@ -171,13 +213,18 @@ class MatchControllerIntTest {
     }
 
     @Test
-    void canNotMatchGroupFromGivenIdsWhenPlayerNotFound() {
+    void canNotMatchGroupFromGivenIdsWhenPlayerNotFound() throws Exception {
 
         MatchRequest request = this.getRequestWithIds();
         request.getPlayerIds().add("gidhainghanhg7");
-        ResponseEntity<MatchResponse> response = restTemplate.postForEntity(
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        headers.setBearerAuth(token);
+        HttpEntity<String> entity = new HttpEntity<>(objectMapper.writeValueAsString(request), headers);
+        ResponseEntity<MatchResponse> response = restTemplate.exchange(
                 baseUrl + "custom",
-                request,
+                HttpMethod.POST,
+                entity,
                 MatchResponse.class
         );
 

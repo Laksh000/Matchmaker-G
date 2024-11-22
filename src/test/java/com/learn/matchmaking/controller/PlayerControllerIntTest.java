@@ -6,7 +6,10 @@ import com.learn.matchmaking.constant.PlayerConstants;
 import com.learn.matchmaking.dto.PlayerBasicDTO;
 import com.learn.matchmaking.dto.PlayerDTO;
 import com.learn.matchmaking.model.Player;
+import com.learn.matchmaking.model.Users;
 import com.learn.matchmaking.repo.PlayerRepository;
+import com.learn.matchmaking.repo.UserRepository;
+import com.learn.matchmaking.service.JWTService;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -17,6 +20,8 @@ import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.boot.test.web.server.LocalServerPort;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.*;
+import org.springframework.security.core.userdetails.User;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
@@ -40,8 +45,11 @@ class PlayerControllerIntTest {
     @LocalServerPort
     private int port;
     private String baseUrl;
+    private String token;
     private final TestRestTemplate restTemplate;
     private final PlayerRepository playerRepository;
+    private final UserRepository userRepository;
+    private final JWTService jwtService;
     private final ObjectMapper objectMapper;
 
     @Container
@@ -56,10 +64,13 @@ class PlayerControllerIntTest {
     }
 
     @Autowired
-    public PlayerControllerIntTest(PlayerRepository playerRepository, TestRestTemplate restTemplate, ObjectMapper objectMapper) {
+    public PlayerControllerIntTest(TestRestTemplate restTemplate, PlayerRepository playerRepository,
+                                   UserRepository userRepository, JWTService jwtService, ObjectMapper objectMapper) {
 
-        this.playerRepository = playerRepository;
         this.restTemplate = restTemplate;
+        this.playerRepository = playerRepository;
+        this.userRepository = userRepository;
+        this.jwtService = jwtService;
         this.objectMapper = objectMapper;
     }
 
@@ -69,6 +80,9 @@ class PlayerControllerIntTest {
         baseUrl = "http://localhost:" + port + "/players/";
         playerRepository.deleteAll();
         playerRepository.saveAll(createMockPlayers());
+        userRepository.deleteAll();
+        userRepository.save(createMockUser());
+        token = jwtService.generateToken("mockAdmin");
     }
 
     public List<Player> createMockPlayers() {
@@ -84,13 +98,26 @@ class PlayerControllerIntTest {
         return new ArrayList<>(List.of(player1, player2));
     }
 
+    public Users createMockUser() {
+
+        Users user =  new Users();
+        user.setUsername("mockAdmin");
+        user.setPassword(new BCryptPasswordEncoder(12).encode("Admin@000"));
+
+        return user;
+    }
+
     @Test
     void canGetPlayers() {
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.setBearerAuth(token);
+        HttpEntity<String> entity = new HttpEntity<>(null, headers);
 
         ResponseEntity<List<PlayerBasicDTO>> response = restTemplate.exchange(
                 baseUrl + "all",
                 HttpMethod.GET,
-                null,
+                entity,
                 new ParameterizedTypeReference<>() {
                 }
         );
@@ -103,10 +130,14 @@ class PlayerControllerIntTest {
     void canNotGetPlayers() {
 
         playerRepository.deleteAll();
+        HttpHeaders headers = new HttpHeaders();
+        headers.setBearerAuth(token);
+        HttpEntity<String> entity = new HttpEntity<>(null, headers);
+
         ResponseEntity<List<PlayerBasicDTO>> response = restTemplate.exchange(
                 baseUrl + "all",
                 HttpMethod.GET,
-                null,
+                entity,
                 new ParameterizedTypeReference<>() {
                 }
         );
@@ -117,10 +148,14 @@ class PlayerControllerIntTest {
     @Test
     void canGetPlayer() {
 
+        HttpHeaders headers = new HttpHeaders();
+        headers.setBearerAuth(token);
+        HttpEntity<String> entity = new HttpEntity<>(null, headers);
+
         ResponseEntity<PlayerBasicDTO> response = restTemplate.exchange(
                 baseUrl + "Player1",
                 HttpMethod.GET,
-                null,
+                entity,
                 PlayerBasicDTO.class
         );
 
@@ -132,10 +167,14 @@ class PlayerControllerIntTest {
     void canNotGetPlayer() {
 
         playerRepository.deleteAll();
+        HttpHeaders headers = new HttpHeaders();
+        headers.setBearerAuth(token);
+        HttpEntity<String> entity = new HttpEntity<>(null, headers);
+
         ResponseEntity<PlayerBasicDTO> response = restTemplate.exchange(
                 baseUrl + "Player1",
                 HttpMethod.GET,
-                null,
+                entity,
                 PlayerBasicDTO.class
         );
 
@@ -143,7 +182,7 @@ class PlayerControllerIntTest {
     }
 
     @Test
-    void canRegisterPlayers() {
+    void canRegisterPlayers() throws Exception{
 
         PlayerDTO player3= new PlayerDTO();
         player3.setName("Player3");
@@ -153,10 +192,16 @@ class PlayerControllerIntTest {
         player4.setAttributes(new HashMap<>(Map.of("strength", 81, "speed", 100)));
         List<PlayerDTO> players = List.of(player3, player4);
 
-        ResponseEntity<String> response = restTemplate.postForEntity(
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        headers.setBearerAuth(token);
+        HttpEntity<String> entity = new HttpEntity<>(objectMapper.writeValueAsString(players), headers);
+
+        ResponseEntity<String> response = restTemplate.exchange(
                 baseUrl + "register",
-                players,
-                String.class
+                 HttpMethod.POST,
+                 entity,
+                 String.class
         );
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
@@ -164,7 +209,7 @@ class PlayerControllerIntTest {
     }
 
     @Test
-    void canNotRegisterPlayers() {
+    void canNotRegisterPlayers() throws Exception {
 
         PlayerDTO player3= new PlayerDTO();
         player3.setName("Player1");
@@ -174,9 +219,15 @@ class PlayerControllerIntTest {
         player4.setAttributes(new HashMap<>(Map.of("strength", 81, "speed", 100)));
         List<PlayerDTO> players = List.of(player3, player4);
 
-        ResponseEntity<String> response = restTemplate.postForEntity(
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        headers.setBearerAuth(token);
+        HttpEntity<String> entity = new HttpEntity<>(objectMapper.writeValueAsString(players), headers);
+
+        ResponseEntity<String> response = restTemplate.exchange(
                 baseUrl + "register",
-                players,
+                HttpMethod.POST,
+                entity,
                 String.class
         );
 
@@ -186,7 +237,7 @@ class PlayerControllerIntTest {
     }
 
     @Test
-    void canUpdatePlayers() throws JsonProcessingException {
+    void canUpdatePlayers() throws Exception {
 
         String player1Id = playerRepository.findByName("Player1").get().getId();
         String player2Id = playerRepository.findByName("Player2").get().getId();
@@ -200,6 +251,7 @@ class PlayerControllerIntTest {
 
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
+        headers.setBearerAuth(token);
         HttpEntity<String> entity = new HttpEntity<>(objectMapper.writeValueAsString(players), headers);
 
         ResponseEntity<String> response = restTemplate.exchange(
@@ -227,6 +279,7 @@ class PlayerControllerIntTest {
 
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
+        headers.setBearerAuth(token);
         HttpEntity<String> entity = new HttpEntity<>(objectMapper.writeValueAsString(players), headers);
 
         ResponseEntity<String> response = restTemplate.exchange(
@@ -253,6 +306,7 @@ class PlayerControllerIntTest {
 
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
+        headers.setBearerAuth(token);
         HttpEntity<String> entity = new HttpEntity<>(objectMapper.writeValueAsString(players), headers);
 
         ResponseEntity<String> response = restTemplate.exchange(
