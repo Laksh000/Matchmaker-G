@@ -2,16 +2,16 @@ package com.learn.matchmaking.service;
 
 import com.learn.matchmaking.constant.PlayerConstants;
 import com.learn.matchmaking.dto.PlayerDTO;
+import com.learn.matchmaking.exception.PlayerIdMissingException;
 import com.learn.matchmaking.exception.PlayerNotFoundException;
 import com.learn.matchmaking.model.Player;
 import com.learn.matchmaking.dto.PlayerBasicDTO;
 import com.learn.matchmaking.repo.PlayerRepository;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
 @Service
@@ -72,24 +72,31 @@ public class PlayerService {
 
     public String updatePlayers(List<PlayerDTO> players) {
 
+        AtomicInteger playerObjectWithIdNull = new AtomicInteger();
         List<String> missingPlayers = new ArrayList<>();
         List<Player> updatedPlayers = players.stream()
                         .map(
                               updatedPlayer -> {
                                   try {
-                                      Player player = playerRepo.findById(updatedPlayer.getId())
-                                              .orElseThrow(() -> new PlayerNotFoundException(updatedPlayer.getId()));
-                                      if (player != null) {
+                                      Player player = null;
+                                      String playerId = Optional.ofNullable(updatedPlayer.getId())
+                                              .orElseThrow(() -> new PlayerIdMissingException("Player id is null"));
 
-                                          if (updatedPlayer.getName() != null)
-                                              player.setName(updatedPlayer.getName());
-                                          if(updatedPlayer.getIsSearchingForMatch() != null)
-                                              player.setIsSearchingForMatch(updatedPlayer.getIsSearchingForMatch());
-                                          if (updatedPlayer.getAttributes() != null) {
-                                              if (player.getAttributes() == null) {
-                                                  player.setAttributes(updatedPlayer.getAttributes());
-                                              } else {
-                                                  player.getAttributes().putAll(updatedPlayer.getAttributes());
+                                      if(!playerId.isEmpty()) {
+                                          player = playerRepo.findById(playerId)
+                                                  .orElseThrow(() -> new PlayerNotFoundException(updatedPlayer.getId()));
+                                          if (player != null) {
+
+                                              if (updatedPlayer.getName() != null)
+                                                  player.setName(updatedPlayer.getName());
+                                              if (updatedPlayer.getIsSearchingForMatch() != null)
+                                                  player.setIsSearchingForMatch(updatedPlayer.getIsSearchingForMatch());
+                                              if (updatedPlayer.getAttributes() != null) {
+                                                  if (player.getAttributes() == null) {
+                                                      player.setAttributes(updatedPlayer.getAttributes());
+                                                  } else {
+                                                      player.getAttributes().putAll(updatedPlayer.getAttributes());
+                                                  }
                                               }
                                           }
                                       }
@@ -98,15 +105,21 @@ public class PlayerService {
                                   } catch (PlayerNotFoundException pe) {
                                       missingPlayers.add(pe.getMessage());
                                       return null;
+                                  } catch (PlayerIdMissingException pie) {
+                                      playerObjectWithIdNull.getAndIncrement();
+                                      return null;
                                   }
                               }
                         ).filter(Objects::nonNull)
                 .collect(Collectors.toCollection(ArrayList::new));
         playerRepo.saveAll(updatedPlayers);
 
-        if(missingPlayers.isEmpty()){
+        if(missingPlayers.isEmpty() && playerObjectWithIdNull.get() == 0){
 
             return PlayerConstants.UPDATE_SUCCESS_MESSAGE;
+        } else if (playerObjectWithIdNull.get() > 0) {
+
+            return String.format(PlayerConstants.UPDATE_FAILURE_MESSAGE2, playerObjectWithIdNull.get());
         } else {
 
             return PlayerConstants.UPDATE_FAILURE_MESSAGE
