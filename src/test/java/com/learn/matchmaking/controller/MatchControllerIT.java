@@ -33,7 +33,7 @@ import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 
 @Testcontainers
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-class MatchControllerIntTest {
+class MatchControllerIT {
 
     @LocalServerPort
     private int port;
@@ -57,8 +57,8 @@ class MatchControllerIntTest {
     }
 
     @Autowired
-    public MatchControllerIntTest(PlayerRepository playerRepository, TestRestTemplate restTemplate,
-                                  UserRepository userRepository, JWTService jwtService , ObjectMapper objectMapper
+    public MatchControllerIT(PlayerRepository playerRepository, TestRestTemplate restTemplate,
+                             UserRepository userRepository, JWTService jwtService , ObjectMapper objectMapper
     ) {
 
         this.playerRepository = playerRepository;

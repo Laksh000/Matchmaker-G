@@ -20,11 +20,10 @@ import org.testcontainers.junit.jupiter.Testcontainers;
 import org.testcontainers.utility.DockerImageName;
 
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
-import static org.junit.jupiter.api.Assertions.*;
 
 @Testcontainers
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-class UserControllerIntTest {
+class UserControllerIT {
 
     @LocalServerPort
     private int port;
@@ -45,7 +44,7 @@ class UserControllerIntTest {
     }
 
     @Autowired
-    public UserControllerIntTest(TestRestTemplate restTemplate, UserRepository userRepository) {
+    public UserControllerIT(TestRestTemplate restTemplate, UserRepository userRepository) {
 
         this.restTemplate = restTemplate;
         this.userRepository = userRepository;

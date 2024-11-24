@@ -10,23 +10,18 @@ import com.learn.matchmaking.model.Users;
 import com.learn.matchmaking.repo.PlayerRepository;
 import com.learn.matchmaking.repo.UserRepository;
 import com.learn.matchmaking.service.JWTService;
-import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.data.mongo.AutoConfigureDataMongo;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.boot.test.web.server.LocalServerPort;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.*;
-import org.springframework.security.core.userdetails.User;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
-import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 import org.testcontainers.containers.MongoDBContainer;
-import org.testcontainers.containers.wait.strategy.Wait;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 import org.testcontainers.utility.DockerImageName;
@@ -40,7 +35,7 @@ import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 
 @Testcontainers
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-class PlayerControllerIntTest {
+class PlayerControllerIT {
 
     @LocalServerPort
     private int port;
@@ -64,8 +59,8 @@ class PlayerControllerIntTest {
     }
 
     @Autowired
-    public PlayerControllerIntTest(TestRestTemplate restTemplate, PlayerRepository playerRepository,
-                                   UserRepository userRepository, JWTService jwtService, ObjectMapper objectMapper) {
+    public PlayerControllerIT(TestRestTemplate restTemplate, PlayerRepository playerRepository,
+                              UserRepository userRepository, JWTService jwtService, ObjectMapper objectMapper) {
 
         this.restTemplate = restTemplate;
         this.playerRepository = playerRepository;
