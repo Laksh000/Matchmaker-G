@@ -65,7 +65,7 @@ The project follows a modular structure for better maintainability:
 
 Clone the Repository
 ```command
-git clone https://github.com/<your-username>/matchmaking.git  
+git clone https://github.com/Laksh000/matchmaking.git  
 cd matchmaking
 ```  
 Build the Project
