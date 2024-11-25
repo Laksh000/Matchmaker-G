@@ -6,13 +6,14 @@ A **Spring Boot**-based matchmaking service designed to group players for multip
 
 ## Features
 
-- **Player Management:** Registration, retrieval, and updates.
+- **Player Management:** Registration, retrieval, deletion and updates.
 - **Flexible Matchmaking:**
-    - Match players from a pool of active players.
-    - Match players from a custom list of IDs.
+      - Match players from a pool of active players.
+      - Match players from a custom list of IDs. 
+      - With option to match fair
 - **Secure Access:** JWT-based authentication for game admins.
 - **Database:** MongoDB integration for data storage.
-- **Testing:** Comprehensive unit and integration tests with **Testcontainers**.
+- **Testing:** Comprehensive unit and integration tests with **Mockito**, **MockMvc** and **Testcontainers** respectively.
 
 ---
 
@@ -20,8 +21,8 @@ A **Spring Boot**-based matchmaking service designed to group players for multip
 ### Backend
 
 * Java (JDK 22)
-* Spring Boot (MVC, Data, Security, JWT)
-* MongoDB (with Testcontainers for testing)
+* Spring Boot (MVC, Data, Security(JWT))
+* MongoDB (with Testcontainers for integration testing)
 
 ### Testing
 
@@ -48,6 +49,8 @@ The project follows a modular structure for better maintainability:
 - **dto/**: Structures for transferring data between layers.
 - **constant/**: Stores constants used across the application.
 - **exception/**: Custom exception handling.
+- **config/**: Custom configuration.
+- **filter/** : filter (ex: JWTFilter)
 
 ---
 
@@ -283,6 +286,28 @@ or (if id's are not sent)
 
 ```
 "Update failed for 2 players, as player id's were not found in the request"
+```
+#### DELETE   `/players/delete`
+delete players.
+
+Request:
+```json
+[ 
+    "hajdgfjplayer1id",
+    "hajdgfjplayer2id",
+    "hajdgfjplayer3id"
+]
+```
+Response:
+
+200 OK:
+```
+"Player deletion successful"
+```
+
+400 Bad Request:
+```
+"Player deletion failed for the following players: hajdgfjplayer2id, "hajdgfjplayer3id"
 ```
 
 ## Matchmaking

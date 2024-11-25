@@ -1,5 +1,6 @@
 package com.learn.matchmaking.model;
 
+import com.learn.matchmaking.dto.UsersDTO;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -18,4 +19,11 @@ public class Users {
     @Indexed(unique = true)
     private String username;
     private String password;
+
+    public Users(UsersDTO user) {
+
+        super();
+        this.username = user.getUsername();
+        this.password = user.getPassword();
+    }
 }

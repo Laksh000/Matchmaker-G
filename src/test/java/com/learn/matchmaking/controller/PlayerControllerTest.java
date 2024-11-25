@@ -313,4 +313,51 @@ class PlayerControllerTest {
                         .content(playersJSON))
                 .andExpect(status().isBadRequest());
     }
+
+    @Test
+    void canDeletePlayers() throws Exception {
+
+        //given
+        String player1Id = "kjdshfGIkhvfytvf";
+        String player2Id = "auebvgavbiu";
+        List<String> playerIds = new ArrayList<>(List.of(player1Id, player2Id));
+        String playersJSON = objectMapper.writeValueAsString(playerIds);
+
+        //when
+        when(jwtService.extractUsername(testToken)).thenReturn(username);
+        when(myUserDetailsService.loadUserByUsername(username)).thenReturn(userDetails);
+        when(jwtService.validateToken(testToken, userDetails)).thenReturn(true);
+        when(playerService.deletePlayers(playerIds)).thenReturn(PlayerConstants.DELETE_SUCCESSFUL_MESSAGE);
+
+        //then
+        mockMvc.perform(MockMvcRequestBuilders.delete("/players/delete")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .header("Authorization", "Bearer " + testToken )
+                        .content(playersJSON))
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    void canNotDeletePlayers() throws Exception {
+
+        //given
+        String player1Id = "kjdshfGIkhvfytvf";
+        String player2Id = "auebvgavbiu";
+        List<String> playerIds = new ArrayList<>(List.of(player1Id, player2Id));
+        String playersJSON = objectMapper.writeValueAsString(playerIds);
+        String failureMessage = PlayerConstants.DELETE_FAILURE_MESSAGE + "Player2";
+
+        //when
+        when(jwtService.extractUsername(testToken)).thenReturn(username);
+        when(myUserDetailsService.loadUserByUsername(username)).thenReturn(userDetails);
+        when(jwtService.validateToken(testToken, userDetails)).thenReturn(true);
+        when(playerService.deletePlayers(playerIds)).thenReturn(failureMessage);
+
+        //then
+        mockMvc.perform(MockMvcRequestBuilders.delete("/players/delete")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .header("Authorization", "Bearer " + testToken )
+                        .content(playersJSON))
+                .andExpect(status().isBadRequest());
+    }
 }

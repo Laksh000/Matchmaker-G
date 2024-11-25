@@ -1,6 +1,7 @@
 package com.learn.matchmaking.service;
 
 import com.learn.matchmaking.constant.UserConstants;
+import com.learn.matchmaking.dto.UsersDTO;
 import com.learn.matchmaking.model.Users;
 import com.learn.matchmaking.repo.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -29,12 +30,13 @@ public class UsersService {
         this.jwtService = jwtService;
     }
 
-    public String registerUser(Users user) {
+    public String registerUser(UsersDTO userDTO) {
 
-        Optional<Users> existingUser = userRepo.findByUsername(user.getUsername());
+        Optional<Users> existingUser = userRepo.findByUsername(userDTO.getUsername());
 
         if (existingUser.isEmpty()) {
 
+            Users user = new Users(userDTO);
             user.setPassword(bCryptPasswordEncoder.encode(user.getPassword()));
             userRepo.save(user);
 
@@ -45,7 +47,7 @@ public class UsersService {
         }
     }
 
-    public String verifyUser(Users user) {
+    public String verifyUser(UsersDTO user) {
 
         Authentication authentication = authenticationManager
                 .authenticate(new UsernamePasswordAuthenticationToken(

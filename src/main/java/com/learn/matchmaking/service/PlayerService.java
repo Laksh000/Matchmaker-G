@@ -127,4 +127,34 @@ public class PlayerService {
         }
     }
 
+    public String deletePlayers(List<String> playerIds) {
+
+        List<String> missingPlayers = new ArrayList<>();
+        List<String> deletePlayers = playerIds.stream()
+                .map(
+                        deletePlayer -> {
+                            try {
+                                  Player  player = playerRepo.findById(deletePlayer)
+                                            .orElseThrow(() -> new PlayerNotFoundException(deletePlayer));
+                                return player.getId();
+
+                            } catch (PlayerNotFoundException pe) {
+                                missingPlayers.add(pe.getMessage());
+                                return null;
+                            }
+                        }
+                ).filter(Objects::nonNull)
+                .collect(Collectors.toCollection(ArrayList::new));
+        playerRepo.deleteAllById(deletePlayers);
+
+        if(missingPlayers.isEmpty()){
+
+            return PlayerConstants.DELETE_SUCCESSFUL_MESSAGE;
+
+        } else {
+
+            return PlayerConstants.DELETE_FAILURE_MESSAGE
+                    + String.join(", ", missingPlayers);
+        }
+    }
 }
