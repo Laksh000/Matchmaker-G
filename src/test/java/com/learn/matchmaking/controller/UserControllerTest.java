@@ -1,9 +1,8 @@
 package com.learn.matchmaking.controller;
 
 import com.learn.matchmaking.constant.UserConstants;
-import com.learn.matchmaking.model.Users;
+import com.learn.matchmaking.dto.UsersDTO;
 import com.learn.matchmaking.service.UsersService;
-import org.apache.coyote.Response;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -14,7 +13,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
-import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
@@ -23,9 +21,9 @@ class UserControllerTest {
     @Mock private UsersService usersService;
     @InjectMocks private UserController userController;
 
-    private Users createMockUser() {
+    private UsersDTO createMockUser() {
 
-        Users user = new Users();
+        UsersDTO user = new UsersDTO();
         user.setUsername("testAdmin");
         user.setPassword("Admin@000");
 
@@ -35,7 +33,7 @@ class UserControllerTest {
     @Test
     void canRegisterUser() {
 
-        Users user = createMockUser();
+        UsersDTO user = createMockUser();
 
         when(usersService.registerUser(user)).thenReturn(UserConstants.USER_REGISTRATION_SUCCESSFUL_MESSAGE);
 
@@ -48,7 +46,7 @@ class UserControllerTest {
     @Test
     void canNotRegisterUser() {
 
-        Users user = createMockUser();
+        UsersDTO user = createMockUser();
 
         when(usersService.registerUser(user)).thenReturn(UserConstants.USER_REGISTRATION_FAILED_MESSAGE);
 
@@ -61,7 +59,7 @@ class UserControllerTest {
     @Test
     void canLoginUser() {
 
-        Users user = createMockUser();
+        UsersDTO user = createMockUser();
 
         when(usersService.verifyUser(user)).thenReturn("dummyToken");
 
@@ -74,7 +72,7 @@ class UserControllerTest {
     @Test
     void canNotLoginUser() {
 
-        Users user = createMockUser();
+        UsersDTO user = createMockUser();
 
         when(usersService.verifyUser(user)).thenThrow(new UsernameNotFoundException(UserConstants.USER_LOGIN_FAILED_MESSAGE));
 

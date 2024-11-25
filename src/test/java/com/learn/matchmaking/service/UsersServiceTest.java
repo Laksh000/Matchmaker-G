@@ -1,6 +1,7 @@
 package com.learn.matchmaking.service;
 
 import com.learn.matchmaking.constant.UserConstants;
+import com.learn.matchmaking.dto.UsersDTO;
 import com.learn.matchmaking.model.Users;
 import com.learn.matchmaking.repo.UserRepository;
 import org.junit.jupiter.api.BeforeEach;
@@ -30,7 +31,7 @@ class UsersServiceTest {
     @Mock private JWTService jwtService;
     @InjectMocks private UsersService usersService;
 
-    private Users testAdmin;
+    private UsersDTO testAdmin;
 
     @BeforeEach
     void setUp() {
@@ -38,9 +39,9 @@ class UsersServiceTest {
         testAdmin = createMockUser();
     }
 
-    private Users createMockUser() {
+    private UsersDTO createMockUser() {
 
-        Users user = new Users();
+        UsersDTO user = new UsersDTO();
         user.setUsername("testAdmin");
         user.setPassword("Admin@000");
 
@@ -51,7 +52,6 @@ class UsersServiceTest {
     void canRegisterUser() {
 
         when(userRepository.findByUsername(testAdmin.getUsername())).thenReturn(Optional.empty());
-        when(userRepository.save(testAdmin)).thenReturn(testAdmin);
         String response = usersService.registerUser(testAdmin);
 
         assertThat(response).isEqualTo(UserConstants.USER_REGISTRATION_SUCCESSFUL_MESSAGE);
@@ -60,7 +60,9 @@ class UsersServiceTest {
     @Test
     void canNotRegisterUser() {
 
-        when(userRepository.findByUsername(testAdmin.getUsername())).thenReturn(Optional.of(testAdmin));
+        Users user = new Users(testAdmin);
+
+        when(userRepository.findByUsername(testAdmin.getUsername())).thenReturn(Optional.of(user));
         String response = usersService.registerUser(testAdmin);
 
         assertThat(response).isEqualTo(String.format(UserConstants.USER_REGISTRATION_FAILED_MESSAGE, testAdmin.getUsername()));

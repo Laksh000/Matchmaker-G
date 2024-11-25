@@ -238,4 +238,76 @@ class PlayerServiceTest {
         assertThat(actual).isEqualTo(PlayerConstants.UPDATE_FAILURE_MESSAGE +  player2.getId());
         verify(playerRepo, times(1)).saveAll(anyList());
     }
+
+    @Test
+    void canDeletePlayers() {
+
+        //given
+        Player player1 = new Player();
+        player1.setId("kjdshfGIkhvfytvf");
+        player1.setName("Player1");
+        player1.setAttributes(
+                new HashMap<>(Map.of(
+                        "strength", 85,
+                        "speed", 92
+                ))
+        );
+        Player player2 = new Player();
+        player2.setId("auebvgavbiu");
+        player2.setName("Player2");
+        player2.setAttributes(
+                new HashMap<>(Map.of(
+                        "strength",75 ,
+                        "speed", 69
+                ))
+        );
+        List<String> playerIds = new ArrayList<>();
+        playerIds.add(player1.getId());
+        playerIds.add(player2.getId());
+
+        //when
+        when(playerRepo.findById(player1.getId())).thenReturn(Optional.of(player1));
+        when(playerRepo.findById(player2.getId())).thenReturn(Optional.of(player2));
+        String actual = playerService.deletePlayers(playerIds);
+
+        //then
+        assertThat(actual).isEqualTo(PlayerConstants.DELETE_SUCCESSFUL_MESSAGE);
+        verify(playerRepo, times(1)).deleteAllById(anyList());
+    }
+
+    @Test
+    void canNotDeletePlayers() {
+
+        //given
+        Player player1 = new Player();
+        player1.setId("kjdshfGIkhvfytvf");
+        player1.setName("Player1");
+        player1.setAttributes(
+                new HashMap<>(Map.of(
+                        "strength", 85,
+                        "speed", 92
+                ))
+        );
+        Player player2 = new Player();
+        player2.setId("auebvgavbiu");
+        player2.setName("Player2");
+        player2.setAttributes(
+                Map.of(
+                        "strength",75 ,
+                        "speed", 69
+                )
+        );
+        List<String> playerIds = new ArrayList<>();
+        playerIds.add(player1.getId());
+        playerIds.add(player2.getId());
+
+        //when
+        when(playerRepo.findById(player1.getId())).thenReturn(Optional.of(player1));
+        when(playerRepo.findById(player2.getId())).thenReturn(Optional.empty());
+        String actual = playerService.deletePlayers(playerIds);
+
+        //then
+        assertThat(actual).isEqualTo(PlayerConstants.DELETE_FAILURE_MESSAGE +  player2.getId());
+        verify(playerRepo, times(1)).deleteAllById(anyList());
+    }
 }

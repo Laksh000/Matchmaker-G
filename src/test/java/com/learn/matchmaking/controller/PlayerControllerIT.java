@@ -314,4 +314,50 @@ class PlayerControllerIT {
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
         assertThat(response.getBody()).isEqualTo(String.format(PlayerConstants.UPDATE_FAILURE_MESSAGE2, 1));
     }
+
+    @Test
+    void canDeletePlayers() throws Exception {
+
+        String player1Id = playerRepository.findByName("Player1").get().getId();
+        String player2Id = playerRepository.findByName("Player2").get().getId();
+        List<String> playerIds = new ArrayList<>(List.of(player1Id, player2Id));
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        headers.setBearerAuth(token);
+        HttpEntity<String> entity = new HttpEntity<>(objectMapper.writeValueAsString(playerIds), headers);
+
+        ResponseEntity<String> response = restTemplate.exchange(
+                baseUrl + "delete",
+                HttpMethod.DELETE,
+                entity,
+                String.class
+        );
+
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(response.getBody()).isEqualTo(PlayerConstants.DELETE_SUCCESSFUL_MESSAGE);
+    }
+
+    @Test
+    void canNotDeletePlayersWhenPlayerDoesNotExist() throws JsonProcessingException {
+
+        String player1Id = playerRepository.findByName("Player1").get().getId();
+        String player2Id = "idnotexists";
+        List<String> playerIds = new ArrayList<>(List.of(player1Id, player2Id));
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        headers.setBearerAuth(token);
+        HttpEntity<String> entity = new HttpEntity<>(objectMapper.writeValueAsString(playerIds), headers);
+
+        ResponseEntity<String> response = restTemplate.exchange(
+                baseUrl + "delete",
+                HttpMethod.DELETE,
+                entity,
+                String.class
+        );
+
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+        assertThat(response.getBody()).isEqualTo(PlayerConstants.DELETE_FAILURE_MESSAGE + player2Id);
+    }
 }
