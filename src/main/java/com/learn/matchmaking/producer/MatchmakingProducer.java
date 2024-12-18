@@ -1,17 +1,17 @@
 package com.learn.matchmaking.producer;
 
 import com.learn.matchmaking.dto.MatchRequest;
+import com.learn.matchmaking.model.MatchRequestStatus;
+import com.learn.matchmaking.repo.MatchRequestStatusRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.kafka.support.KafkaHeaders;
 import org.springframework.kafka.support.SendResult;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.support.MessageBuilder;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContext;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
+import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 
 @Service
@@ -19,15 +19,20 @@ import java.util.concurrent.CompletableFuture;
 public class MatchmakingProducer {
 
     private final KafkaTemplate<String, MatchRequest> kafkaTemplate;
+    private final MatchRequestStatusRepository statusRepository;
 
     public CompletableFuture<SendResult<String, MatchRequest>> sendMatchmakingRequest(MatchRequest request) {
 
-        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        String username = auth!=null?auth.getName():"anonymous";
+        String trackingId = UUID.randomUUID().toString();
+
+        MatchRequestStatus status = new MatchRequestStatus();
+        status.setTrackingId(trackingId);
+        status.setStatus("QUEUED");
+        statusRepository.save(status);
 
         Message<MatchRequest> message = MessageBuilder.withPayload(request)
                 .setHeader(KafkaHeaders.TOPIC, "matchmaking-requests")
-                .setHeader("username", username)
+                .setHeader("trackingId", trackingId)
                 .build();
         CompletableFuture<SendResult<String, MatchRequest>> future = kafkaTemplate.send(message);
 

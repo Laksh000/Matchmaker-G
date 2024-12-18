@@ -1,7 +1,9 @@
 package com.learn.matchmaking.controller;
 
 import com.learn.matchmaking.dto.MatchRequest;
+import com.learn.matchmaking.dto.MatchRequestStatusDTO;
 import com.learn.matchmaking.dto.MatchResponse;
+import com.learn.matchmaking.exception.InvalidTrackingIdException;
 import com.learn.matchmaking.producer.MatchmakingProducer;
 import com.learn.matchmaking.service.MatchService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -10,18 +12,13 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.kafka.core.KafkaTemplate;
-import org.springframework.scheduling.annotation.Async;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.concurrent.CompletableFuture;
 
@@ -56,10 +53,10 @@ public class MatchController {
     })
     @PostMapping("pool")
     public CompletableFuture<ResponseEntity<String>> matchGroupFromPool(@RequestBody MatchRequest matchRequest) {
-        System.out.println("SecurityContext at Controller: " + SecurityContextHolder.getContext().getAuthentication());
+
         return  producer.sendMatchmakingRequest(matchRequest)
                     .thenApply(
-                            result -> ResponseEntity.status(HttpStatus.OK).body("Match request received and queued for processing.")
+                            result -> ResponseEntity.status(HttpStatus.OK).body("Match request received and queued for processing with tracking id: " + result.getRecordMetadata())
                     ).exceptionally(
                             ex -> ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(ex.getMessage())
                     );
@@ -100,6 +97,26 @@ public class MatchController {
         } else {
 
             return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
+        }
+    }
+
+    @GetMapping("status/{trackingId}")
+    public ResponseEntity<MatchRequestStatusDTO> getMatchmakingRequestStatus(@PathVariable String trackingId) {
+
+        MatchRequestStatusDTO matchRequestStatusDTO = matchService.getMatchRequestStatus(trackingId);
+
+        try {
+            if(matchRequestStatusDTO.getStatus().equals("FAILED")) {
+
+                return  new ResponseEntity<>(matchRequestStatusDTO, HttpStatus.BAD_REQUEST);
+            } else {
+
+                return new ResponseEntity<>(matchRequestStatusDTO, HttpStatus.OK);
+            }
+        } catch (InvalidTrackingIdException ie) {
+
+            System.out.println(ie.getMessage());
+            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
         }
     }
 }

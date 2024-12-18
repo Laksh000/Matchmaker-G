@@ -2,11 +2,16 @@ package com.learn.matchmaking.service;
 
 import com.learn.matchmaking.constant.MatchConstants;
 import com.learn.matchmaking.dto.MatchRequest;
+import com.learn.matchmaking.dto.MatchRequestStatusDTO;
 import com.learn.matchmaking.dto.MatchResponse;
 import com.learn.matchmaking.dto.PlayerBasicDTO;
+import com.learn.matchmaking.exception.InvalidTrackingIdException;
 import com.learn.matchmaking.exception.PlayerNotFoundException;
+import com.learn.matchmaking.model.MatchRequestStatus;
 import com.learn.matchmaking.model.Player;
+import com.learn.matchmaking.repo.MatchRequestStatusRepository;
 import com.learn.matchmaking.repo.PlayerRepository;
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -19,15 +24,11 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
+@RequiredArgsConstructor
 public class MatchService {
 
     private final PlayerRepository playerRepo;
-
-    @Autowired
-    public MatchService(PlayerRepository playerRepo) {
-
-        this.playerRepo = playerRepo;
-    }
+    private final MatchRequestStatusRepository statusRepo;
 
     public MatchResponse getGroupsFromPool(MatchRequest matchRequest) {
 
@@ -155,5 +156,18 @@ public class MatchService {
         }
 
         return totalWeight > 0 ? totalScore / totalWeight : 0.0;
+    }
+
+    public MatchRequestStatusDTO getMatchRequestStatus(String trackingId) {
+
+        Optional<MatchRequestStatus> matchRequestStatus = statusRepo.findById(trackingId);
+
+        if(matchRequestStatus.isPresent()){
+
+            return new MatchRequestStatusDTO(matchRequestStatus.get());
+        } else {
+
+            throw new InvalidTrackingIdException("The following Tracking id: "+ trackingId +" is Invalid");
+        }
     }
 }
